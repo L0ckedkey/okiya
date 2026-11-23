@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Okiya Online</title>
+<link rel="icon" href="/assets/a1.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --paper:#f3ecdf; --paper2:#e7dbc5; --card:#fbf7ef;
+  --ink:#1c1916; --muted:#6e6458; --line:#d6c8ae;
+  --red:#b8322a; --red-soft:#f1d6cf; --red-deep:#8f231d;
+  --black:#2a2623; --gold:#c9982f; --gold-soft:#f3e2b8;
+  --wood:#3b2a1f; --wood2:#5b4232;
+  --serif:"Shippori Mincho",serif; --sans:"Zen Kaku Gothic New",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--sans); color:var(--ink); min-height:100vh;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #fff8ea 0%, transparent 60%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    var(--paper);
+}
+button{font:inherit;color:inherit}
+
+/* ---------- header ---------- */
+header{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  max-width:1180px; margin:0 auto; padding:18px 20px 6px;
+}
+.brand{display:flex; align-items:baseline; gap:12px}
+.brand h1{font-family:var(--serif); font-weight:800; font-size:30px; letter-spacing:.18em; margin:0}
+.brand .jp{font-family:var(--serif); color:var(--red); font-size:20px; font-weight:700}
+.brand .sub{color:var(--muted); font-size:13px}
+.tools{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end}
+.btn{
+  border:1px solid var(--line); background:var(--card); border-radius:999px;
+  padding:7px 14px; font-size:14px; cursor:pointer; transition:background .15s, border-color .15s, transform .1s;
+}
+.btn:hover{border-color:#bba98a; background:#fff}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.on{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+.btn.primary{background:var(--red); color:#fff; border-color:var(--red)}
+.btn.primary:hover{background:var(--red-deep)}
+
+/* ---------- table layout ---------- */
+main{
+  max-width:1180px; margin:0 auto; padding:8px 20px 28px;
+  display:grid; grid-template-columns:230px minmax(0,1fr) 230px; gap:22px; align-items:start;
+  grid-template-areas:"p0 center p1";
+}
+#p0{grid-area:p0} #p1{grid-area:p1} .center{grid-area:center}
+
+/* ---------- player panels ---------- */
+.player{
+  background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px;
+  position:relative; transition:box-shadow .25s, border-color .25s, transform .25s; margin-top:96px;
+}
+.player.active{border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft), 0 10px 30px -14px rgba(60,40,10,.45)}
+.player .head{display:flex; align-items:center; gap:12px}
+.player .avatar{width:58px; height:58px; flex:none}
+.player .avatar img{width:100%; height:100%; display:block}
+.player .name{font-family:var(--serif); font-weight:700; font-size:19px; line-height:1.15}
+.player .role{font-size:12px; color:var(--muted)}
+.player .turnTag{
+  position:absolute; top:-11px; left:16px; background:var(--gold); color:#fff; font-size:11px; font-weight:700;
+  letter-spacing:.08em; padding:3px 9px; border-radius:999px; opacity:0; transform:translateY(4px); transition:.2s;
+}
+.player.active .turnTag{opacity:1; transform:none}
+.score{margin:14px 0 12px; padding:10px 0; border-top:1px dashed var(--line); border-bottom:1px dashed var(--line);
+  display:flex; align-items:center; justify-content:space-between; font-size:13px; color:var(--muted)}
+.score b{font-family:var(--serif); font-size:24px; color:var(--ink)}
+.dots{display:flex; gap:6px}
+.dots i{width:14px; height:14px; border-radius:50%; border:2px solid var(--line); display:block}
+.dots i.f{background:var(--red); border-color:var(--red)}
+#p1 .dots i.f{background:var(--black); border-color:var(--black)}
+.tray-label{font-size:12px; color:var(--muted); margin-bottom:8px}
+.tray{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+.tray img{width:100%; aspect-ratio:1; display:block; transition:opacity .3s, filter .3s}
+.tray img.used{opacity:.16; filter:grayscale(1)}
+
+/* ---------- center ---------- */
+.center{display:flex; flex-direction:column; align-items:center; gap:14px}
+.info{
+  width:100%; max-width:620px; display:flex; align-items:center; gap:16px;
+  background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; min-height:96px;
+}
+.pile{position:relative; width:72px; height:72px; flex:none}
+.pile .stack{position:absolute; inset:0; border-radius:6px; background:#fff; border:1px solid var(--line)}
+.pile img{position:absolute; inset:0; width:100%; height:100%; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.18); animation:land .35s ease-out}
+.pile .empty{position:absolute; inset:0; border:2px dashed var(--line); border-radius:6px; display:grid; place-items:center;
+  font-family:var(--serif); color:#b9a988; font-size:26px}
+.pile .count{position:absolute; right:-8px; bottom:-8px; background:var(--ink); color:var(--paper); font-size:11px; font-weight:700;
+  min-width:22px; height:22px; border-radius:11px; display:grid; place-items:center; padding:0 5px; z-index:2}
+@keyframes land{from{transform:translateY(-14px) rotate(-6deg); opacity:0}to{transform:none; opacity:1}}
+.msg{flex:1; min-width:0}
+.msg .who{font-family:var(--serif); font-weight:700; font-size:18px; margin-bottom:3px}
+.msg .what{font-size:14px; color:var(--muted); line-height:1.5}
+.chip{display:inline-block; padding:1px 9px; border-radius:999px; font-weight:700; font-size:13px; color:var(--ink); background:var(--gold-soft); margin:0 1px}
+.msg .actions{margin-top:6px}
+
+.frame{
+  width:min(620px, 100%); padding:14px; border-radius:12px;
+  background:linear-gradient(135deg,var(--wood2),var(--wood) 60%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.06), 0 18px 40px -18px rgba(40,25,10,.7);
+}
+.board{display:grid; grid-template-columns:repeat(4,1fr); gap:7px}
+.cell{
+  position:relative; aspect-ratio:1; border:0; padding:0; border-radius:5px; overflow:hidden; background:var(--card);
+  cursor:default; transition:transform .15s, box-shadow .2s, filter .2s; outline:none;
+}
+.cell img.tile{width:100%; height:100%; display:block; transition:filter .2s}
+.cell.dim img.tile{filter:saturate(.25) brightness(.72)}
+.cell.legal{cursor:pointer; box-shadow:0 0 0 3px var(--gold), 0 0 16px 2px rgba(233,190,90,.7); animation:glow 1.6s ease-in-out infinite}
+.cell.legal:hover,.cell.legal:focus-visible{transform:scale(1.035); z-index:2}
+@keyframes glow{50%{box-shadow:0 0 0 3px var(--gold), 0 0 4px 0 rgba(233,190,90,.3)}}
+.cell.tok{background:
+  radial-gradient(circle at 50% 45%, #fffaf0 0%, #efe4cf 75%);}
+.cell.tok img{position:absolute; inset:6%; width:88%; height:88%; filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}
+.cell.fresh img{animation:pop .4s cubic-bezier(.3,1.6,.6,1)}
+@keyframes pop{from{transform:scale(.3); opacity:0}to{transform:scale(1); opacity:1}}
+.cell.win{box-shadow:inset 0 0 0 4px var(--red), 0 0 22px 4px rgba(184,50,42,.65); z-index:2}
+.cell.win.p1{box-shadow:inset 0 0 0 4px #111, 0 0 22px 4px rgba(255,255,255,.55)}
+.cell .lab{position:absolute; left:4px; right:4px; bottom:4px; font-size:10.5px; font-weight:700; text-align:center;
+  background:rgba(251,247,239,.92); border-radius:4px; padding:2px 3px; color:var(--ink); line-height:1.25; pointer-events:none}
+.board.nolab .lab{display:none}
+.hint{font-size:12.5px; color:var(--muted); text-align:center; max-width:620px}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed; inset:0; background:rgba(28,22,16,.55); display:none; align-items:center; justify-content:center; padding:18px; z-index:50; backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.modal{background:var(--paper); border-radius:16px; width:min(520px,100%); max-height:92vh; overflow:auto; padding:26px 26px 22px;
+  box-shadow:0 30px 70px -20px rgba(0,0,0,.6); border:1px solid #fff6; animation:rise .25s ease-out}
+@keyframes rise{from{transform:translateY(12px); opacity:0}}
+.modal h2{font-family:var(--serif); font-size:24px; margin:0 0 4px}
+.modal .lead{color:var(--muted); font-size:14px; margin:0 0 18px; line-height:1.55}
+.field{margin-bottom:16px}
+.field > label{display:block; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:7px}
+.seg{display:flex; flex-wrap:wrap; gap:6px}
+.seg input{position:absolute; opacity:0; pointer-events:none}
+.seg label{border:1px solid var(--line); background:var(--card); border-radius:10px; padding:8px 13px; font-size:14px; cursor:pointer; transition:.15s}
+.seg input:checked + label{background:var(--ink); border-color:var(--ink); color:var(--paper)}
+.seg input:focus-visible + label{outline:2px solid var(--gold); outline-offset:2px}
+.row-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:20px; flex-wrap:wrap}
+.rules h3{font-family:var(--serif); font-size:17px; margin:18px 0 6px}
+.rules p,.rules li{font-size:14px; line-height:1.6}
+.rules ul{padding-left:20px; margin:6px 0}
+.legend{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px}
+.legend figure{margin:0; text-align:center; font-size:11px; color:var(--muted)}
+.legend img{width:100%; border-radius:4px; display:block; margin-bottom:3px}
+.result-top{display:flex; align-items:center; gap:16px; margin-bottom:12px}
+.result-top img{width:84px; height:84px}
+.bigscore{display:flex; justify-content:center; align-items:center; gap:18px; font-family:var(--serif); margin:16px 0 4px}
+.bigscore span{font-size:15px; color:var(--muted)}
+.bigscore b{font-size:34px}
+
+/* petals */
+.petal{position:fixed; top:-30px; width:14px; height:11px; background:#f2b6c0; border-radius:12px 1px 12px 1px; z-index:60; pointer-events:none;
+  animation:fall linear forwards; opacity:.9}
+@keyframes fall{to{transform:translate(var(--dx),110vh) rotate(var(--r)); opacity:.6}}
+@media (prefers-reduced-motion:reduce){.cell.legal{animation:none}.petal{display:none}}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  main{grid-template-columns:1fr 1fr; grid-template-areas:"p0 p1" "center center"; gap:12px}
+  .player{margin-top:6px; padding:12px}
+  .player .avatar{width:42px; height:42px}
+  .player .name{font-size:16px}
+  .score{margin:10px 0 8px; padding:6px 0}
+  .score b{font-size:19px}
+  .tray{grid-template-columns:repeat(8,1fr); gap:3px}
+  .tray-label{display:none}
+  header{flex-direction:column; align-items:flex-start; padding-top:14px}
+  .tools{justify-content:flex-start}
+}
+@media (max-width:520px){
+  main{padding:6px 10px 20px}
+  .frame{padding:8px} .board{gap:4px}
+  .info{padding:10px; gap:12px; min-height:0}
+  .pile{width:56px; height:56px}
+  .msg .who{font-size:16px} .msg .what{font-size:13px}
+  .brand h1{font-size:24px}
+  .cell .lab{font-size:8.5px; padding:1px}
+}
+
+/* ---------- online extras ---------- */
+[hidden]{display:none!important}
+.roomchip{display:inline-flex; align-items:center; gap:8px; border:1px dashed #bba98a; background:var(--card); border-radius:999px; padding:6px 12px; font-size:14px; cursor:pointer}
+.roomchip b{font-family:ui-monospace,Consolas,monospace; letter-spacing:.12em; font-size:15px}
+.conn{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); padding:0 4px}
+.conn i,.online i{width:8px; height:8px; border-radius:50%; background:#3c9a5f; display:inline-block}
+.conn.off i{background:#c0392b; animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.online{font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:5px; margin-top:2px}
+.online.off i{background:#b9ad99}
+.you{display:inline-block; font-family:var(--sans); font-size:10.5px; font-weight:700; letter-spacing:.06em; background:var(--ink); color:var(--paper); border-radius:999px; padding:2px 7px; vertical-align:middle; margin-left:4px}
+.player.empty .avatar img{opacity:.25; filter:grayscale(1)}
+.codebig{font-family:ui-monospace,Consolas,monospace; font-size:30px; font-weight:700; letter-spacing:.2em; color:var(--ink)}
+.home h2{margin-bottom:2px}
+.home .cards{display:grid; gap:14px; margin-top:16px}
+.home .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px}
+.home .card h3{font-family:var(--serif); font-size:18px; margin:0 0 4px}
+.home .card p{margin:0 0 12px; font-size:13.5px; color:var(--muted); line-height:1.5}
+.inp{width:100%; font:inherit; font-size:15px; border:1px solid var(--line); background:#fff; border-radius:10px; padding:10px 12px; color:var(--ink)}
+.inp:focus{outline:2px solid var(--gold); outline-offset:1px; border-color:transparent}
+.inp.code{font-family:ui-monospace,Consolas,monospace; font-size:20px; letter-spacing:.25em; text-transform:uppercase; text-align:center}
+.joinrow{display:flex; gap:8px} .joinrow .inp{flex:1}
+.err{background:var(--red-soft); color:var(--red-deep); border-radius:10px; padding:9px 12px; font-size:13.5px; margin-top:12px}
+.err:empty{display:none}
+.toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:10px; font-size:14px; opacity:0; transition:.25s; z-index:80; pointer-events:none; max-width:90vw; text-align:center}
+.toast.show{opacity:1; transform:translateX(-50%)}
+.share{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap}
+.share input{flex:1; min-width:160px; font-size:12.5px; padding:7px 10px}
+.small{font-size:12.5px; color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>OKIYA</h1><span class="jp">置屋</span>
+    <span class="sub">Online · tanpa login</span>
+  </div>
+  <div class="tools">
+    <span class="conn" id="conn"><i></i><span>Menyambung…</span></span>
+    <button class="roomchip" id="roomChip" hidden title="Salin link undangan">ID <b id="roomId"></b> ⧉</button>
+    <button class="btn" id="bLab">Label ubin</button>
+    <button class="btn primary" id="bHow">▶ Cara main</button>
+    <button class="btn" id="bRules">Aturan</button>
+    <button class="btn" id="bHome">Beranda</button>
+  </div>
+</header>
+
+<main id="table">
+  <aside class="player" id="p0"></aside>
+  <section class="center">
+    <div class="info">
+      <div class="pile" id="pile"><div class="empty">庭</div></div>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="frame"><div class="board nolab" id="board" aria-label="Taman 4×4"></div></div>
+    <div class="hint" id="hint"></div>
+  </section>
+  <aside class="player" id="p1"></aside>
+</main>
+
+<div class="overlay" id="ov"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Okiya — tutorial beranimasi "Cara main".  Pemakaian: OkiyaTutorial.open({base:'assets/', onDone(){...}}) */
+(function(){
+const VEG=['Sakura','Maple','Pinus','Iris'], SYM=['Burung','Hujan & Awan','Matahari Terbit','Puisi'];
+const veg=t=>t&3, sym=t=>t>>2;
+let BASE='assets/';
+const tileSrc=t=>`${BASE}t${String(t+1).padStart(2,'0')}.webp`;
+const tokSrc=(p,n)=>`${BASE}${p?'b':'a'}${n}.webp`;
+// susunan tetap papan contoh: sel -> ubin
+const L=[0,5,10,15, 6,3,12,9, 13,8,7,2, 11,14,1,4];
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const T=ms=>REDUCED?Math.min(ms,250):ms;
+
+const CSS=`
+.otu-ov{position:fixed;inset:0;z-index:95;background:rgba(24,18,12,.62);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:14px;opacity:0;transition:opacity .25s}
+.otu-ov.show{opacity:1}
+.otu{width:min(880px,100%);max-height:94vh;overflow:auto;background:#f4ede0;border-radius:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.65);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;color:#1c1916;transform:translateY(14px) scale(.98);transition:transform .3s cubic-bezier(.2,.9,.3,1.2)}
+.otu-ov.show .otu{transform:none}
+.otu-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px 0}
+.otu-top h2{font-family:"Shippori Mincho",serif;font-size:22px;margin:0;letter-spacing:.02em}
+.otu-top h2 small{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:#8a7f70;font-weight:500;margin-left:8px;letter-spacing:.06em}
+.otu-x{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:#6e6458;padding:4px 8px;border-radius:8px}
+.otu-x:hover{background:#e8dcc6}
+.otu-tldr{margin:12px 22px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px}
+.otu-tldr b{font-size:11px;letter-spacing:.12em;color:#8a7f70;margin-right:2px}
+.otu-tldr button{border:1px solid #d6c8ae;background:#fbf7ef;border-radius:999px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer;color:#4a4238;transition:.2s}
+.otu-tldr button.on{background:#1c1916;color:#f4ede0;border-color:#1c1916}
+.otu-tldr button.win.on{background:#b8322a;border-color:#b8322a}
+.otu-tldr button.tie.on{background:#6e6458;border-color:#6e6458}
+.otu-body{display:grid;grid-template-columns:auto 1fr;gap:26px;padding:18px 22px 6px;align-items:center}
+.otu-stage{position:relative;display:flex;gap:14px;align-items:flex-start}
+.otu-frame{position:relative;width:max-content;padding:9px;border-radius:10px;background:linear-gradient(135deg,#5b4232,#3b2a1f 60%);box-shadow:0 14px 30px -14px rgba(40,25,10,.7)}
+.otu-board{display:grid;grid-template-columns:repeat(4,58px);grid-auto-rows:58px;gap:4px;position:relative}
+.otu-c{position:relative;border-radius:4px;overflow:hidden;background:#fbf7ef;transition:filter .3s,box-shadow .3s,transform .3s}
+.otu-c img.t{width:100%;height:100%;display:block}
+.otu-c.tk{background:radial-gradient(circle at 50% 45%,#fffaf0,#efe4cf 75%)}
+.otu-c.tk img{position:absolute;inset:5%;width:90%;height:90%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.otu-c.pop img{animation:otuPop .45s cubic-bezier(.3,1.7,.6,1)}
+@keyframes otuPop{from{transform:scale(.2);opacity:0}}
+.otu-c.g{box-shadow:0 0 0 3px #d4a43a,0 0 14px 2px rgba(233,190,90,.75);z-index:2;animation:otuGlow 1.4s ease-in-out infinite}
+@keyframes otuGlow{50%{box-shadow:0 0 0 3px #d4a43a,0 0 3px 0 rgba(233,190,90,.3)}}
+.otu-c.no::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(45deg,transparent 46%,rgba(184,50,42,.9) 46% 54%,transparent 54%),
+  linear-gradient(-45deg,transparent 46%,rgba(184,50,42,.9) 46% 54%,transparent 54%),rgba(40,20,15,.35);animation:otuIn .3s}
+.otu-c.dim{filter:saturate(.2) brightness(.6)}
+.otu-c.won{box-shadow:inset 0 0 0 3px #b8322a,0 0 18px 3px rgba(184,50,42,.6);z-index:2}
+.otu-c.won.p1{box-shadow:inset 0 0 0 3px #111,0 0 18px 3px rgba(255,255,255,.7)}
+.otu-c.shake{animation:otuShake .5s}
+@keyframes otuShake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.otu-c .tag{position:absolute;left:3px;right:3px;bottom:3px;font-size:9px;font-weight:700;text-align:center;border-radius:3px;padding:1px 0;color:#fff;animation:otuIn .3s}
+.otu-c .tag.v{background:#c2477a}.otu-c .tag.s{background:#2f6fa8}
+.otu-c .plus{position:absolute;inset:0;display:grid;place-items:center;font-family:"Shippori Mincho",serif;font-weight:800;font-size:22px;color:#b8322a;text-shadow:0 0 6px #fff,0 0 10px #fff;animation:otuIn .2s}
+@keyframes otuIn{from{opacity:0}}
+.otu-svg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.otu-svg .ln{fill:none;stroke:#e2b44a;stroke-width:7;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,210,110,.9))}
+.otu-svg .ln.draw{animation:otuDraw .7s ease-out forwards}
+.otu-svg .ghost{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-dasharray:2 9;opacity:.85}
+.otu-svg .ghost{animation:otuIn .6s ease-out}
+@keyframes otuDraw{to{stroke-dashoffset:0}}
+.otu-stamp{position:absolute;left:50%;top:50%;z-index:5;pointer-events:none;transform:translate(-50%,-50%) rotate(-12deg);border:4px solid #b8322a;color:#b8322a;background:rgba(251,247,239,.93);border-radius:10px;padding:6px 14px 4px;text-align:center;font-family:"Shippori Mincho",serif;font-weight:800;animation:otuStamp .45s cubic-bezier(.2,1.6,.4,1)}
+.otu-stamp .k{font-size:30px;line-height:1}
+.otu-stamp .w{font-size:13px;letter-spacing:.2em;margin-top:2px}
+.otu-stamp.tie{border-color:#6e6458;color:#6e6458}
+@keyframes otuStamp{from{transform:translate(-50%,-50%) rotate(-12deg) scale(2.6);opacity:0}}
+.otu-side{display:flex;flex-direction:column;align-items:center;gap:8px;width:84px}
+.otu-side .lbl{font-size:10.5px;letter-spacing:.1em;color:#8a7f70;font-weight:700}
+.otu-pile{position:relative;width:70px;height:70px;border-radius:6px;border:2px dashed #cdbd9f;display:grid;place-items:center;color:#bba98a;font-family:"Shippori Mincho",serif;font-size:24px}
+.otu-pile img{position:absolute;inset:-2px;width:calc(100% + 4px);height:calc(100% + 4px);border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.otu-req{display:flex;flex-direction:column;gap:4px;align-items:center;min-height:44px}
+.otu-req span{font-size:10.5px;font-weight:700;color:#fff;border-radius:999px;padding:2px 8px;white-space:nowrap;animation:otuIn .3s}
+.otu-req .v{background:#c2477a}.otu-req .s{background:#2f6fa8}
+.otu-score{display:none;flex-direction:column;align-items:center;gap:2px;background:#fbf7ef;border:1px solid #d6c8ae;border-radius:10px;padding:6px 8px;width:80px}
+.otu-score.show{display:flex;animation:otuIn .3s}
+.otu-score b{font-family:"Shippori Mincho",serif;font-size:28px;color:#b8322a;line-height:1;transition:transform .15s}
+.otu-score b.bump{transform:scale(1.35)}
+.otu-score span{font-size:10.5px;color:#8a7f70}
+.otu-cap{margin:10px auto 0;min-height:38px;font-size:13px;line-height:1.45;color:#4a4238;text-align:center;max-width:270px;transition:opacity .2s}
+.otu-copy .step{font-size:11.5px;font-weight:700;letter-spacing:.14em;color:#b8322a}
+.otu-copy h3{font-family:"Shippori Mincho",serif;font-size:26px;margin:4px 0 10px;line-height:1.2}
+.otu-copy p{font-size:15px;line-height:1.65;margin:0 0 10px;color:#2c2722}
+.otu-copy .key{background:#fbf7ef;border-left:4px solid #c9982f;border-radius:0 10px 10px 0;padding:10px 12px;font-size:14px;line-height:1.55;color:#3a332c}
+.otu-copy .key.red{border-color:#b8322a}.otu-copy .key.grey{border-color:#6e6458}
+.otu-copy ul{margin:8px 0 0;padding-left:18px;font-size:14px;line-height:1.6;color:#3a332c}
+.otu-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 22px 20px}
+.otu-dots{display:flex;gap:7px}
+.otu-dots i{width:9px;height:9px;border-radius:50%;background:#d6c8ae;cursor:pointer;transition:.25s}
+.otu-dots i.on{background:#1c1916;width:24px;border-radius:5px}
+.otu-btns{display:flex;gap:8px}
+.otu-b{border:1px solid #d6c8ae;background:#fbf7ef;border-radius:999px;padding:8px 16px;font:inherit;font-size:14px;cursor:pointer;color:#1c1916}
+.otu-b:hover{background:#fff}
+.otu-b:disabled{opacity:.35;cursor:default}
+.otu-b.pri{background:#b8322a;border-color:#b8322a;color:#fff}
+.otu-b.pri:hover{background:#8f231d}
+.otu-fly{position:fixed;z-index:120;border-radius:4px;pointer-events:none;box-shadow:0 12px 24px rgba(0,0,0,.35)}
+.otu-copy.swap{animation:otuSlide .35s ease-out}
+@keyframes otuSlide{from{opacity:0;transform:translateX(14px)}}
+@media (max-width:760px){
+  .otu-body{grid-template-columns:1fr;gap:12px;justify-items:center}
+  .otu-board{grid-template-columns:repeat(4,52px);grid-auto-rows:52px}
+  .otu-copy h3{font-size:22px}
+  .otu-copy{width:100%}
+  .otu-tldr{margin-top:8px}
+}
+@media (max-width:420px){
+  .otu-board{grid-template-columns:repeat(4,46px);grid-auto-rows:46px;gap:3px}
+  .otu-side{width:66px}.otu-pile{width:56px;height:56px}
+  .otu-top,.otu-body,.otu-foot{padding-left:14px;padding-right:14px}.otu-tldr{margin-left:14px;margin-right:14px}
+}
+@media (prefers-reduced-motion:reduce){.otu-c.g{animation:none}}
+`;
+
+/* ---------------- adegan (mini papan) ---------------- */
+let run=0;
+const CANCEL={};
+const sleep=ms=>{const id=run;return new Promise((res,rej)=>setTimeout(()=>id===run?res():rej(CANCEL),T(ms)));};
+
+class Scene{
+  constructor(el){
+    this.el=el;
+    el.innerHTML=`<div class="otu-stage">
+        <div><div class="otu-frame"><div class="otu-board"></div><svg class="otu-svg"></svg></div><div class="otu-cap"></div></div>
+        <div class="otu-side"><div class="lbl">TERAKHIR</div><div class="otu-pile">庭</div><div class="otu-req"></div>
+          <div class="otu-score"><span>Poin Merah</span><b>0</b></div></div>
+      </div>`;
+    this.board=el.querySelector('.otu-board'); this.svg=el.querySelector('.otu-svg');
+    this.pile=el.querySelector('.otu-pile'); this.req=el.querySelector('.otu-req');
+    this.capEl=el.querySelector('.otu-cap'); this.scoreBox=el.querySelector('.otu-score'); this.scoreEl=this.scoreBox.querySelector('b');
+    this.cells=[...Array(16)].map(()=>{const d=document.createElement('div');d.className='otu-c';this.board.appendChild(d);return d;});
+    this.state=[]; this.n=[0,0];
+  }
+  // tokens: {cell: 0|1}
+  reset(tokens={},pile=-1){
+    this.svg.innerHTML=''; this.stage().querySelectorAll('.otu-stamp').forEach(s=>s.remove());
+    this.n=[0,0]; this.state=[];
+    for(let i=0;i<16;i++){
+      const p=tokens[i];
+      if(p===0||p===1){ this.state[i]={p}; this.setTok(i,p,false); }
+      else { this.state[i]={t:L[i]}; this.cells[i].className='otu-c'; this.cells[i].innerHTML=`<img class="t" src="${tileSrc(L[i])}" alt="">`; }
+    }
+    this.setPile(pile); this.req.innerHTML=''; this.cap(''); this.scoreBox.classList.remove('show'); this.scoreEl.textContent='0';
+  }
+  stage(){return this.el.querySelector('.otu-stage');}
+  setTok(i,p,anim){
+    const n=(this.n[p]++%8)+1;
+    const c=this.cells[i]; c.className='otu-c tk'+(anim?' pop':''); c.innerHTML=`<img src="${tokSrc(p,n)}" alt="">`;
+    this.state[i]={p};
+  }
+  setPile(t){
+    this.last=t;
+    this.pile.innerHTML=t<0?'庭':`<img src="${tileSrc(t)}" alt="">`;
+  }
+  showReq(t){
+    this.req.innerHTML=t<0?'':`<span class="v">${VEG[veg(t)]}</span><span class="s">${SYM[sym(t)]}</span>`;
+  }
+  cap(html){ this.capEl.innerHTML=html; }
+  clear(...cls){ this.cells.forEach(c=>{ c.classList.remove(...cls); c.querySelectorAll('.tag,.plus').forEach(x=>x.remove()); }); }
+  mark(idx,cls){ idx.forEach(i=>this.cells[i].classList.add(cls)); }
+  tag(i,kind,text){ const s=document.createElement('span'); s.className='tag '+kind; s.textContent=text; this.cells[i].appendChild(s); }
+  tilesLeft(){ return this.state.map((s,i)=>s.t!==undefined?i:-1).filter(i=>i>=0); }
+  // tandai ubin yang cocok dengan syarat terakhir
+  async showMatches(){
+    const t=this.last; this.showReq(t);
+    const left=this.tilesLeft(), mv=[], ms=[];
+    left.forEach(i=>{ const u=this.state[i].t; if(veg(u)===veg(t)) mv.push(i); else if(sym(u)===sym(t)) ms.push(i); });
+    for(const i of mv){ this.cells[i].classList.add('g'); this.tag(i,'v',VEG[veg(t)]); await sleep(160); }
+    for(const i of ms){ this.cells[i].classList.add('g'); this.tag(i,'s',SYM[sym(t)]); await sleep(160); }
+    left.filter(i=>!mv.includes(i)&&!ms.includes(i)).forEach(i=>this.cells[i].classList.add('dim'));
+    return mv.concat(ms);
+  }
+  // ubin di sel i terbang ke tumpukan, lalu karakter p muncul
+  async take(i,p){
+    const id=run;
+    this.clear('g','dim','no');
+    const c=this.cells[i], img=c.querySelector('img.t'), t=this.state[i].t;
+    const a=img.getBoundingClientRect(), b=this.pile.getBoundingClientRect();
+    if(!REDUCED&&a.width){
+      const fly=img.cloneNode(); fly.className='otu-fly';
+      Object.assign(fly.style,{left:a.left+'px',top:a.top+'px',width:a.width+'px',height:a.height+'px'});
+      document.body.appendChild(fly); img.style.opacity='0';
+      const dx=b.left+b.width/2-(a.left+a.width/2), dy=b.top+b.height/2-(a.top+a.height/2), s=b.width/a.width;
+      try{
+        await fly.animate([{transform:'translate(0,0) scale(1) rotate(0)'},{transform:`translate(${dx*.5}px,${dy*.5-40}px) scale(${(1+s)/2*1.15}) rotate(-8deg)`,offset:.5},{transform:`translate(${dx}px,${dy}px) scale(${s}) rotate(0)`}],{duration:650,easing:'cubic-bezier(.5,0,.25,1)'}).finished;
+      }catch(e){}
+      fly.remove();
+    }
+    if(id!==run) throw CANCEL;
+    this.setPile(t); this.setTok(i,p,true); this.req.innerHTML='';
+    await sleep(380);
+  }
+  center(i){ const s=this.cells[i]; return [s.offsetLeft+s.offsetWidth/2, s.offsetTop+s.offsetHeight/2]; }
+  line(a,b,ghost){
+    const [x1,y1]=this.center(a),[x2,y2]=this.center(b);
+    const el=document.createElementNS('http://www.w3.org/2000/svg','line');
+    const off=9; // svg berada di dalam frame, papan bergeser padding frame
+    el.setAttribute('x1',x1+off);el.setAttribute('y1',y1+off);el.setAttribute('x2',x2+off);el.setAttribute('y2',y2+off);
+    const len=Math.hypot(x2-x1,y2-y1);
+    if(ghost) el.setAttribute('class','ghost');
+    else{ el.setAttribute('class','ln draw'); el.style.strokeDasharray=len; el.style.strokeDashoffset=len; }
+    this.svg.appendChild(el);
+  }
+  box(cells){
+    const xs=cells.map(i=>this.cells[i]), off=9;
+    const l=Math.min(...xs.map(c=>c.offsetLeft))+off-3, t=Math.min(...xs.map(c=>c.offsetTop))+off-3;
+    const r=Math.max(...xs.map(c=>c.offsetLeft+c.offsetWidth))+off+3, bt=Math.max(...xs.map(c=>c.offsetTop+c.offsetHeight))+off+3;
+    const el=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    el.setAttribute('x',l);el.setAttribute('y',t);el.setAttribute('width',r-l);el.setAttribute('height',bt-t);el.setAttribute('rx',8);
+    const len=2*((r-l)+(bt-t)); el.setAttribute('class','ln draw'); el.style.strokeDasharray=len; el.style.strokeDashoffset=len;
+    this.svg.appendChild(el);
+  }
+  stamp(kanji,word,tie){
+    const s=document.createElement('div'); s.className='otu-stamp'+(tie?' tie':''); s.innerHTML=`<div class="k">${kanji}</div><div class="w">${word}</div>`;
+    this.el.querySelector('.otu-frame').appendChild(s);
+  }
+  async countPoints(){
+    this.scoreBox.classList.add('show');
+    let n=0;
+    for(const i of this.tilesLeft()){
+      const p=document.createElement('span'); p.className='plus'; p.textContent='+1'; this.cells[i].appendChild(p);
+      this.cells[i].classList.add('dim');
+      n++; this.scoreEl.textContent=n; this.scoreEl.classList.add('bump'); setTimeout(()=>this.scoreEl.classList.remove('bump'),150);
+      await sleep(260);
+    }
+    return n;
+  }
+}
+
+/* ---------------- slide ---------------- */
+const BORDER=[0,1,2,3,7,11,15,14,13,12,8,4], CENTER=[5,6,9,10];
+const TIE_LAYOUT=[0,0,1,1, 1,1,0,0, 0,0,1,1, 1,1,0,0];   // 8 vs 8 tanpa barisan / kotak
+const obj=arr=>Object.fromEntries(arr.map((p,i)=>[i,p]).filter(([,p])=>p===0||p===1));
+
+const SLIDES=[
+ { key:'start', chip:'Mulai', title:'Langkah pertama',
+   html:`<p>Ambil satu ubin dari <b>tepi</b> taman, lalu taruh karaktermu di tempatnya.</p>
+         <div class="key">4 ubin di <b>tengah</b> tidak boleh diambil di langkah pertama.</div>`,
+   async play(s){
+     s.reset();
+     s.cap('Ubin di tepi boleh dipilih…');
+     for(const i of BORDER){ s.cells[i].classList.add('g'); await sleep(70); }
+     await sleep(350); s.mark(CENTER,'no'); s.cap('…4 ubin tengah tidak boleh.');
+     await sleep(1500);
+     s.cap('<b>Merah</b> mengambil ubin tepi. Ubinnya ditumpuk di samping papan.');
+     await s.take(0,0); await sleep(1600);
+   }},
+ { key:'match', chip:'Syarat', title:'Ikuti syarat ubin terakhir',
+   html:`<p>Ubin yang terakhir diambil jadi <b>syarat</b> untuk lawan. Lawan harus mengambil ubin dengan:</p>
+         <div class="key"><b style="color:#c2477a">tanaman sama</b> (Sakura, Maple, Pinus, Iris) <b>atau</b> <b style="color:#2f6fa8">simbol sama</b> (Burung, Hujan &amp; Awan, Matahari, Puisi).</div>
+         <p style="margin-top:10px">Cukup <b>satu</b> yang sama.</p>`,
+   async play(s){
+     s.reset({0:0},0);
+     s.cap('Ubin terakhir: <b>Sakura · Burung</b>');
+     await sleep(700); await s.showMatches();
+     s.cap('Hitam boleh memilih ubin yang menyala.');
+     await sleep(1700);
+     s.cap('<b>Hitam</b> mengambil <b>Sakura · Matahari</b>…');
+     await s.take(9,1);
+     s.cap('…syarat untuk Merah sekarang: <b>Sakura</b> atau <b>Matahari</b>.');
+     await s.showMatches(); await sleep(2400);
+   }},
+ { key:'row', chip:'4 berjajar', cls:'win', title:'Menang: 4 berjajar',
+   html:`<p>Susun <b>4 karaktermu dalam satu garis</b>.</p>
+         <div class="key red">Mendatar, menurun, atau diagonal. Semuanya sah.</div>`,
+   async play(s){
+     s.reset({0:0,5:0,10:0, 3:1,9:1,14:1},7);
+     s.cap('Merah sudah punya 3 karakter di garis diagonal…');
+     await sleep(1500);
+     s.cap('<b>Hitam</b> mengambil Pinus · Hujan. Syaratnya: <b>Pinus</b> atau <b>Hujan</b>.');
+     await s.take(4,1); s.showReq(s.last); await sleep(1100);
+     s.cap('<b>Merah</b> mengambil Sakura · <b>Hujan</b> dan melengkapi garis!');
+     await s.take(15,0);
+     s.line(0,15); s.mark([0,5,10,15],'won'); await sleep(650);
+     s.stamp('勝','MENANG');
+     await sleep(1300);
+     s.cap('Garis mendatar dan menurun juga berlaku.');
+     s.line(12,15,true); await sleep(250); s.line(3,15,true);
+     await sleep(2400);
+   }},
+ { key:'square', chip:'Kotak 2×2', cls:'win', title:'Menang: kotak 2×2',
+   html:`<p>Susun <b>4 karaktermu membentuk kotak</b> 2×2.</p>
+         <div class="key red">Boleh di mana saja di papan, tidak harus di tengah.</div>`,
+   async play(s){
+     s.reset({5:0,6:0,9:0, 0:1,11:1,14:1},8);
+     s.cap('Merah punya 3 dari 4 sudut kotak…');
+     await sleep(1400);
+     s.cap('<b>Hitam</b> mengambil Iris · Matahari. Syaratnya: <b>Iris</b> atau <b>Matahari</b>.');
+     await s.take(12,1); s.showReq(s.last); await sleep(1100);
+     s.cap('<b>Merah</b> mengambil <b>Iris</b> · Hujan. Kotaknya lengkap!');
+     await s.take(10,0);
+     s.box([5,6,9,10]); s.mark([5,6,9,10],'won'); await sleep(700);
+     s.stamp('勝','MENANG'); await sleep(2800);
+   }},
+ { key:'block', chip:'Lawan buntu', cls:'win', title:'Menang: lawan buntu',
+   html:`<p>Ambil ubin yang syaratnya <b>tidak bisa dipenuhi lawan</b>.</p>
+         <div class="key red">Kalau tidak ada ubin tersisa yang cocok, lawan tidak bisa jalan, dan <b>kamu menang</b>.</div>`,
+   async play(s){
+     const t=obj(TIE_LAYOUT); delete t[1]; delete t[2]; delete t[6];
+     s.reset(t,15);
+     s.cap('Tersisa 3 ubin. Syarat untuk Merah: <b>Iris</b> atau <b>Puisi</b>.');
+     s.showReq(15); await sleep(1600);
+     s.cap('<b>Merah</b> mengambil Sakura · <b>Puisi</b>…');
+     await s.take(6,0); s.showReq(s.last);
+     s.cap('Syarat untuk Hitam: <b>Sakura</b> atau <b>Puisi</b>. Tidak ada yang cocok!');
+     await sleep(700);
+     for(const i of [1,2]){ s.cells[i].classList.add('shake','no'); await sleep(280); }
+     await sleep(700);
+     s.stamp('勝','MENANG');
+     s.cap('Hitam buntu, jadi <b>Merah menang</b>.'); await sleep(2800);
+   }},
+ { key:'tie', chip:'Seri', cls:'tie', title:'Seri',
+   html:`<p>Kalau <b>ubin terakhir</b> sudah diambil dan tidak ada yang membentuk barisan atau kotak, hasilnya <b>seri</b>.</p>
+         <div class="key grey">Tidak ada yang mendapat kemenangan atau poin. Ronde berikutnya dimulai oleh pemain yang tadi <b>tidak</b> memulai.</div>`,
+   async play(s){
+     const t=obj(TIE_LAYOUT); delete t[13];
+     s.reset(t,13);
+     s.cap('Tinggal 1 ubin. Tidak ada barisan 4 atau kotak 2×2.');
+     await sleep(1500);
+     s.cap('<b>Hitam</b> mengambil ubin terakhir…');
+     await s.take(13,1); await sleep(500);
+     s.cells.forEach(c=>c.classList.add('dim')); await sleep(300);
+     s.stamp('引分','SERI',true);
+     s.cap('Papan penuh tanpa pemenang, jadi <b>seri</b>.'); await sleep(2800);
+   }},
+ { key:'lose', chip:'Kalah & poin', title:'Kalah & skor',
+   html:`<p>Kamu <b>kalah</b> kalau lawan lebih dulu membentuk 4 berjajar atau kotak 2×2, <b>atau kamu yang buntu</b>. Ronde berikutnya, yang kalah jalan duluan.</p>
+         <ul><li><b>Satu permainan</b>: pemenang ronde menang.</li>
+         <li><b>3 kemenangan</b>: yang pertama menang 3 ronde.</li>
+         <li><b>Poin</b>: pemenang mendapat poin sebanyak <b>ubin yang tersisa</b> di papan. Yang pertama mencapai 10, 15, atau 20 poin menang.</li></ul>`,
+   async play(s){
+     s.reset({5:0,6:0,9:0,10:0, 0:1,11:1,14:1,12:1},7);
+     s.box([5,6,9,10]); s.mark([5,6,9,10],'won');
+     s.cap('Merah menang dengan kotak 2×2. Masih ada 8 ubin di papan.');
+     await sleep(1600);
+     const n=await s.countPoints();
+     s.cap(`Mode poin: <b>Merah +${n}</b>, Hitam 0. Menang cepat = poin besar!`);
+     await sleep(3000);
+   }},
+];
+
+/* ---------------- modal ---------------- */
+let ov=null, scene=null, idx=0, opts={};
+function ensureCss(){ if(document.getElementById('otu-css')) return; const st=document.createElement('style'); st.id='otu-css'; st.textContent=CSS; document.head.appendChild(st); }
+
+function open(o={}){
+  opts=o; if(o.base) BASE=o.base; ensureCss();
+  // pramuat gambar
+  for(let t=0;t<16;t++) new Image().src=tileSrc(t);
+  ov=document.createElement('div'); ov.className='otu-ov';
+  ov.innerHTML=`<div class="otu" role="dialog" aria-modal="true" aria-label="Cara main Okiya">
+    <div class="otu-top"><h2>Cara main <small>± 1 MENIT</small></h2><button class="otu-x" aria-label="Tutup">✕</button></div>
+    <div class="otu-tldr"><b>TL;DR</b>${SLIDES.map((s,i)=>`<button data-i="${i}" class="${s.cls||''}">${s.chip}</button>`).join('')}</div>
+    <div class="otu-body"><div class="otu-scene"></div><div class="otu-copy"></div></div>
+    <div class="otu-foot"><div class="otu-dots">${SLIDES.map((_,i)=>`<i data-i="${i}"></i>`).join('')}</div>
+      <div class="otu-btns"><button class="otu-b" data-a="prev">‹ Kembali</button><button class="otu-b pri" data-a="next">Lanjut ›</button></div></div>
+  </div>`;
+  document.body.appendChild(ov);
+  scene=new Scene(ov.querySelector('.otu-scene'));
+  ov.addEventListener('click',e=>{
+    if(e.target===ov||e.target.closest('.otu-x')) return close();
+    const j=e.target.closest('[data-i]'); if(j) return go(+j.dataset.i);
+    const a=e.target.closest('[data-a]'); if(!a) return;
+    if(a.dataset.a==='prev') go(idx-1);
+    else if(idx===SLIDES.length-1) close(); else go(idx+1);
+  });
+  document.addEventListener('keydown',onKey);
+  requestAnimationFrame(()=>ov.classList.add('show'));
+  go(o.start||0);
+}
+function onKey(e){
+  if(!ov) return;
+  if(e.key==='Escape') close();
+  else if(e.key==='ArrowRight'&&idx<SLIDES.length-1) go(idx+1);
+  else if(e.key==='ArrowLeft'&&idx>0) go(idx-1);
+}
+function go(i){
+  if(i<0||i>=SLIDES.length) return;
+  idx=i; run++;
+  document.querySelectorAll('.otu-fly').forEach(f=>f.remove());
+  const s=SLIDES[i], copy=ov.querySelector('.otu-copy');
+  copy.classList.remove('swap'); void copy.offsetWidth; copy.classList.add('swap');
+  copy.innerHTML=`<div class="step">${i+1} / ${SLIDES.length}</div><h3>${s.title}</h3>${s.html}`;
+  ov.querySelectorAll('.otu-tldr button').forEach((b,j)=>b.classList.toggle('on',j===i));
+  ov.querySelectorAll('.otu-dots i').forEach((d,j)=>d.classList.toggle('on',j===i));
+  ov.querySelector('[data-a=prev]').disabled=i===0;
+  ov.querySelector('[data-a=next]').textContent=i===SLIDES.length-1?'Siap main!':'Lanjut ›';
+  loop(s);
+}
+async function loop(s){
+  const id=run;
+  while(id===run&&ov){
+    try{ await s.play(scene); await sleep(200); }
+    catch(e){ if(e!==CANCEL) console.error(e); return; }
+  }
+}
+function close(){
+  if(!ov) return; run++;
+  document.removeEventListener('keydown',onKey);
+  document.querySelectorAll('.otu-fly').forEach(f=>f.remove());
+  const o=ov; ov=null; o.classList.remove('show'); setTimeout(()=>o.remove(),250);
+  try{ localStorage.setItem('okiya-tutorial-seen','1'); }catch(e){}
+  if(opts.onDone) opts.onDone();
+}
+function seen(){ try{ return localStorage.getItem('okiya-tutorial-seen')==='1'; }catch(e){ return false; } }
+window.OkiyaTutorial={open,close,seen};
+})();
+
+</script>
+<script>
+(()=>{
+/* ================== konstanta ================== */
+const VEG=['Sakura','Maple','Pinus','Iris'];
+const SYM=['Burung','Hujan & Awan','Matahari Terbit','Puisi'];
+const veg=t=>t&3, sym=t=>t>>2;
+const tileSrc=t=>`/assets/t${String(t+1).padStart(2,'0')}.webp`;
+const tokSrc=(p,n)=>`/assets/${p?'b':'a'}${n}.webp`;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+
+/* ================== status klien ================== */
+let ws=null, connected=false, queue=[], retry=0;
+let room=null;          // Game ID yang sedang dibuka
+let seat=-1;            // 0 = Merah, 1 = Hitam, -1 = penonton
+let S=null;             // state terakhir dari server
+let prevMoves=-1, prevOver=false, resultShown=false;
+let showLabels=LS.get('okiya-lab',false);
+
+/* ================== koneksi ================== */
+function connect(){
+  const url=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws';
+  ws=new WebSocket(url);
+  ws.onopen=()=>{
+    connected=true; retry=0; setConn();
+    if(room) rawSend({t:'join',id:room,token:LS.get('okiya-tokens',{})[room]||'',name:myName()});
+    const q=queue; queue=[]; q.forEach(rawSend);
+  };
+  ws.onmessage=e=>{ let m; try{m=JSON.parse(e.data);}catch(_){return;} onMsg(m); };
+  ws.onclose=()=>{
+    connected=false; setConn();
+    setTimeout(connect, Math.min(8000, 600*Math.pow(1.6,retry++)));
+  };
+}
+function rawSend(o){ ws.send(JSON.stringify(o)); }
+function send(o){ if(connected&&ws.readyState===1) rawSend(o); else queue.push(o); }
+function setConn(){
+  const c=$('#conn'); c.classList.toggle('off',!connected);
+  c.lastElementChild.textContent=connected?'Terhubung':'Menyambung ulang…';
+}
+
+function onMsg(m){
+  if(m.t==='joined'){
+    room=m.id; seat=m.seat;
+    if(m.token){ const t=LS.get('okiya-tokens',{}); t[m.id]=m.token; LS.set('okiya-tokens',t); }
+    LS.set('okiya-last',m.id);
+    history.replaceState(null,'','/?id='+m.id);
+    $('#roomId').textContent=m.id; $('#roomChip').hidden=false;
+    if($('#modal').dataset.kind==='home') close();
+    if(seat<0) toast('Kedua kursi sudah terisi — Anda menonton.');
+  }else if(m.t==='state'){
+    const moves=m.g.pile.length;
+    const fresh=S&&S.id===m.id&&moves>prevMoves&&!(m.g.over===false&&moves===0);
+    const becameOver=m.g.over&&!prevOver;
+    const wasWaiting=S&&S.waiting;
+    S=m; S.fresh=fresh; prevMoves=moves; prevOver=m.g.over;
+    if(wasWaiting&&!m.waiting&&seat===0) toast(`${m.players[1].name} bergabung!`);
+    render();
+    if(becameOver){ resultShown=false; if(m.g.winner>=0) petals(); setTimeout(()=>{ if(S.g.over&&!resultShown) showResult(); },1100); }
+    if(!m.g.over&&$('#modal').dataset.kind==='result') close();
+    notifyTurn();
+  }else if(m.t==='error'){
+    if(m.fatal){ leaveRoom(); showHome(m.msg); }
+    else toast(m.msg);
+  }
+}
+
+/* ================== aksi ================== */
+const myName=()=>LS.get('okiya-name','');
+function createRoom(mode,target){ send({t:'create',mode,target,name:myName()}); }
+function joinRoom(id){
+  id=String(id||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(id.length<4){ return false; }
+  room=id; S=null; prevMoves=-1; prevOver=false;
+  send({t:'join',id,token:LS.get('okiya-tokens',{})[id]||'',name:myName()});
+  return true;
+}
+function leaveRoom(){
+  if(room) send({t:'leave'});
+  room=null; seat=-1; S=null; prevMoves=-1; prevOver=false;
+  $('#roomChip').hidden=true;
+  history.replaceState(null,'','/');
+  renderEmpty();
+}
+const inviteLink=()=>`${location.origin}/?id=${room}`;
+async function copyInvite(){
+  const link=inviteLink();
+  try{ await navigator.clipboard.writeText(link); toast('Link undangan disalin'); }
+  catch(e){ openModal('copy',`<h2>Link undangan</h2><p class="lead">Salin link ini dan kirim ke teman:</p>
+     <input class="inp" id="cpy" value="${esc(link)}" readonly><div class="row-actions"><button class="btn primary" id="cpOk">Selesai</button></div>`);
+     const i=$('#cpy'); i.focus(); i.select(); $('#cpOk').onclick=close; }
+}
+
+/* ================== tampilan ================== */
+function pname(p){ return S&&S.players[p]?S.players[p].name:(p?'Menunggu lawan…':'Merah'); }
+const chips=t=>`<span class="chip">${VEG[veg(t)]}</span> atau <span class="chip">${SYM[sym(t)]}</span>`;
+const goal=()=>S.mode==='single'?1:S.mode==='sets'?3:S.target;
+
+function renderPlayer(p){
+  const el=$('#p'+p), g=S.g, pl=S.players[p];
+  el.classList.toggle('active',!g.over&&!S.waiting&&g.turn===p);
+  el.classList.toggle('empty',!pl);
+  let sc;
+  if(S.mode==='sets') sc=`<span>Kemenangan</span><span class="dots">${[0,1,2].map(i=>`<i class="${i<S.score[p]?'f':''}"></i>`).join('')}</span>`;
+  else if(S.mode==='points') sc=`<span>Poin</span><span><b>${S.score[p]}</b> / ${S.target}</span>`;
+  else sc=`<span>Menang</span><b>${S.score[p]}</b>`;
+  const tray=g.order[p].map((n,i)=>`<img src="${tokSrc(p,n)}" alt="" class="${i<g.used[p]?'used':''}">`).join('');
+  const status=!pl?`<span class="online off"><i></i>belum bergabung</span>`
+    :`<span class="online ${pl.online?'':'off'}"><i></i>${pl.online?'online':'terputus'}</span>`;
+  el.innerHTML=`<span class="turnTag">GILIRAN</span>
+    <div class="head"><div class="avatar"><img src="${tokSrc(p,g.order[p][Math.min(g.used[p],7)])}" alt=""></div>
+      <div><div class="name">${esc(pname(p))}${p===seat?'<span class="you">KAMU</span>':''}</div>
+      <div class="role">${p?'Hitam (polos)':'Merah (bermotif)'}</div>${status}</div></div>
+    <div class="score">${sc}</div>
+    <div class="tray-label">Sisa karakter: ${8-g.used[p]}</div>
+    <div class="tray">${tray}</div>`;
+}
+
+function render(){
+  if(!S){ renderEmpty(); return; }
+  const g=S.g;
+  renderPlayer(0); renderPlayer(1);
+  $('#pile').innerHTML = g.last<0 ? `<div class="empty">庭</div>`
+    : `${g.pile.length>1?'<div class="stack" style="transform:translate(3px,3px)"></div>':''}<img src="${tileSrc(g.last)}" alt="" title="${VEG[veg(g.last)]} · ${SYM[sym(g.last)]}"><span class="count">${g.pile.length}</span>`;
+
+  // pesan
+  let who='',what='',act='';
+  const opp=1-seat, myTurn=seat>=0&&!g.over&&!S.waiting&&g.turn===seat;
+  const need = g.last<0 ? `ubin di <b>tepi</b> taman (4 ubin tengah tidak boleh)` : chips(g.last);
+  if(S.waiting){
+    who='Menunggu lawan bergabung…';
+    what=`Bagikan Game ID <b>${esc(S.id)}</b> atau link berikut ke teman:`;
+    act=`<div class="share"><input class="inp" value="${esc(inviteLink())}" readonly onclick="this.select()"><button class="btn primary" id="bCopy">Salin link</button></div>`;
+  }else if(g.over){
+    who=g.winner<0?'Seri!':`${esc(pname(g.winner))} menang!`;
+    what=g.reason==='tie'?'Ubin terakhir sudah diambil tanpa pemenang.':g.reason==='block'?`${esc(pname(1-g.winner))} tidak bisa bergerak.`:g.reason==='square'?'Membentuk kotak 2×2.':'Membentuk barisan 4 karakter.';
+    act=`<div class="actions"><button class="btn primary" id="bRes">Lihat hasil</button></div>`;
+  }else if(myTurn){
+    who='Giliranmu';
+    what = `Pilih ${g.last<0?'':'ubin bergambar '}${need}.`;
+  }else{
+    who=`Giliran ${esc(pname(g.turn))}`;
+    what = `${seat<0?'Anda menonton. ':'Menunggu langkah lawan. '}Harus memilih ${need}.`;
+  }
+  if(!S.waiting&&!g.over&&S.note&&g.pile.length===0){
+    what=(S.note.kind==='draw'?`Undian: <b>${esc(pname(S.note.p))}</b> jalan lebih dulu.`:S.note.kind==='tie'?`Ronde lalu seri, jadi <b>${esc(pname(S.note.p))}</b> gantian jalan lebih dulu.`:`<b>${esc(pname(S.note.p))}</b> kalah ronde lalu, jadi jalan lebih dulu.`)+'<br>'+what;
+  }
+  if(!S.waiting&&seat>=0&&S.players[opp]&&!S.players[opp].online&&!g.over){
+    what+=`<br><span style="color:var(--red)">⚠ ${esc(pname(opp))} terputus — menunggu tersambung kembali.</span>`;
+  }
+  $('#msg').innerHTML=`<div class="who">${who}</div><div class="what">${what}</div>${act}`;
+  const bc=$('#bCopy'); if(bc) bc.onclick=copyInvite;
+  const br=$('#bRes'); if(br) br.onclick=showResult;
+
+  // papan
+  const lg=new Set(myTurn?S.legal:[]);
+  const winSet=new Set(g.line||[]);
+  const b=$('#board'); b.classList.toggle('nolab',!showLabels);
+  b.innerHTML=g.cells.map((v,i)=>{
+    if(v>15){
+      const p=v-16;
+      return `<button class="cell tok ${i===g.lastCell&&S.fresh?'fresh':''} ${winSet.has(i)?'win p'+p:''}" data-i="${i}" tabindex="-1" aria-label="Karakter ${p?'Hitam':'Merah'}"><img src="${tokSrc(p,g.img[i])}" alt=""></button>`;
+    }
+    const L=lg.has(i), lab=`${VEG[veg(v)]} · ${SYM[sym(v)]}`;
+    return `<button class="cell ${L?'legal':''} ${myTurn&&!L?'dim':''}" data-i="${i}" ${L?'':'tabindex="-1"'} title="${lab}" aria-label="${lab}${L?' — bisa dipilih':''}"><img class="tile" src="${tileSrc(v)}" alt=""><span class="lab">${lab}</span></button>`;
+  }).join('');
+  S.fresh=false;
+  const modeTxt=S.mode==='single'?'Satu permainan':S.mode==='sets'?'Pertandingan 3 kemenangan':`Poin kemenangan · target ${S.target}`;
+  $('#hint').innerHTML=`${modeTxt} · Ronde ${S.games+(g.over?0:1)}${S.spectators?` · ${S.spectators} penonton`:''} · Menang dengan 4 berjajar, kotak 2×2, atau membuat lawan tidak bisa bergerak.`;
+  $('#bLab').classList.toggle('on',showLabels);
+}
+
+function renderEmpty(){
+  // papan hiasan saat belum masuk room
+  const cells=[...Array(16).keys()];
+  for(const id of ['#p0','#p1']) $(id).innerHTML='';
+  $('#p0').style.visibility=$('#p1').style.visibility='hidden';
+  $('#pile').innerHTML=`<div class="empty">庭</div>`;
+  $('#msg').innerHTML=`<div class="who">Selamat datang di Okiya</div><div class="what">Buat permainan baru atau gabung dengan Game ID.</div><div class="actions"><button class="btn primary" id="bOpenHome">Mulai</button></div>`;
+  $('#bOpenHome').onclick=()=>showHome();
+  $('#board').innerHTML=cells.map(t=>`<div class="cell"><img class="tile" src="${tileSrc(t)}" alt=""></div>`).join('');
+  $('#hint').textContent='';
+}
+const _render=render;
+render=function(){ $('#p0').style.visibility=$('#p1').style.visibility=''; _render(); };
+
+$('#board').addEventListener('click',e=>{
+  const c=e.target.closest('.cell.legal'); if(!c||!S) return;
+  send({t:'move',i:+c.dataset.i});
+  // umpan balik instan: matikan sorotan sampai server menjawab
+  document.querySelectorAll('.cell.legal').forEach(x=>x.classList.remove('legal'));
+});
+
+function notifyTurn(){
+  const mine=S&&seat>=0&&!S.waiting&&!S.g.over&&S.g.turn===seat;
+  document.title=(mine&&document.hidden?'● Giliranmu — ':'')+'Okiya Online';
+}
+document.addEventListener('visibilitychange',notifyTurn);
+
+/* ================== modal ================== */
+const ov=$('#ov'), modal=$('#modal');
+function openModal(kind,html){ modal.dataset.kind=kind; modal.innerHTML=html; ov.classList.add('show'); }
+function close(){ ov.classList.remove('show'); modal.dataset.kind=''; }
+ov.addEventListener('click',e=>{ if(e.target===ov&&room) close(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&room&&ov.classList.contains('show')) close(); });
+function seg(name,opts,val){
+  return `<div class="seg">${opts.map(([v,t])=>`<input type="radio" name="${name}" id="${name}-${v}" value="${v}" ${String(val)===String(v)?'checked':''}><label for="${name}-${v}">${t}</label>`).join('')}</div>`;
+}
+
+function showHome(errorMsg, presetId){
+  const last=LS.get('okiya-last',null), tokens=LS.get('okiya-tokens',{});
+  const fmt=LS.get('okiya-fmt',{mode:'single',target:10});
+  openModal('home',`<div class="home">
+    <h2>Okiya Online</h2>
+    <p class="lead" style="margin-bottom:10px">Tanpa login — cukup Game ID.</p>
+    <div class="field"><label for="nm">Nama kamu</label><input class="inp" id="nm" maxlength="20" placeholder="mis. Hans" value="${esc(myName())}"></div>
+    <div class="cards">
+      <div class="card"><h3>Gabung permainan</h3><p>Masukkan Game ID dari temanmu.</p>
+        <form class="joinrow" id="fJoin"><input class="inp code" id="code" maxlength="8" placeholder="ABC12" value="${esc(presetId||'')}" autocomplete="off"><button class="btn primary" type="submit">Gabung</button></form></div>
+      <div class="card"><h3>Buat permainan baru</h3><p>Kamu bermain sebagai <b>Merah</b>. Bagikan Game ID ke lawan.</p>
+        <div class="field" style="margin-bottom:10px">${seg('mode',[['single','Satu permainan'],['sets','3 kemenangan'],['points','Poin']],fmt.mode)}</div>
+        <div class="field" id="fTarget" style="margin-bottom:10px">${seg('target',[[10,'10 poin'],[15,'15 poin'],[20,'20 poin']],fmt.target)}</div>
+        <button class="btn primary" id="bCreate">Buat permainan</button></div>
+      ${last&&tokens[last]&&last!==presetId?`<div class="small">Permainan terakhir: <a href="#" id="aLast"><b>${esc(last)}</b> — lanjutkan</a></div>`:''}
+    </div>
+    <div class="err" id="hErr">${esc(errorMsg||'')}</div>
+    <div class="row-actions">${room?'<button class="btn" id="hClose">Tutup</button>':''}<button class="btn" id="hHow">▶ Cara main</button><button class="btn" id="hRules">Aturan</button></div></div>`);
+  const saveName=()=>LS.set('okiya-name',$('#nm').value.trim().slice(0,20));
+  const sync=()=>{$('#fTarget').style.display=modal.querySelector('[name=mode]:checked').value==='points'?'':'none';};
+  modal.querySelectorAll('[name=mode]').forEach(i=>i.onchange=sync); sync();
+  $('#fJoin').onsubmit=e=>{
+    e.preventDefault(); saveName();
+    const v=$('#code').value;
+    if(!joinRoom(v)){ $('#hErr').textContent='Game ID minimal 4 karakter.'; return; }
+    $('#hErr').textContent='Menghubungkan…';
+  };
+  $('#bCreate').onclick=()=>{
+    saveName();
+    const mode=modal.querySelector('[name=mode]:checked').value, target=+modal.querySelector('[name=target]:checked').value;
+    LS.set('okiya-fmt',{mode,target});
+    if(room) send({t:'leave'});
+    room=null; S=null; prevMoves=-1; prevOver=false;
+    createRoom(mode,target); $('#hErr').textContent='Membuat permainan…';
+  };
+  const al=$('#aLast'); if(al) al.onclick=e=>{e.preventDefault(); saveName(); joinRoom(last);};
+  const hc=$('#hClose'); if(hc) hc.onclick=close;
+  $('#hRules').onclick=()=>showRules(true);
+  $('#hHow').onclick=()=>HOW();
+  setTimeout(()=>{ (presetId?$('#nm'):($('#nm').value?$('#code'):$('#nm'))).focus(); },50);
+}
+
+function showRules(back){
+  const fig=t=>`<figure><img src="${tileSrc(t)}" alt="">${VEG[veg(t)]}<br>${SYM[sym(t)]}</figure>`;
+  openModal('rules',`<div class="rules"><h2>Aturan Okiya</h2>
+    <p class="lead">Karya Bruno Cathala &amp; Cyril Bouquet. Dua pemain berebut restu kaisar di taman kekaisaran.</p>
+    <h3>Persiapan</h3>
+    <p>16 ubin taman diacak dan disusun dalam kotak 4×4. Tiap pemain punya 8 karakter: <b>Merah</b> (bermotif) dan <b>Hitam</b> (polos).</p>
+    <h3>Jalannya permainan</h3>
+    <ul>
+      <li>Pemain pertama mengambil satu ubin di <b>tepi</b> taman (bukan 4 ubin tengah) dan menggantinya dengan karakternya.</li>
+      <li>Lawan harus mengambil ubin yang punya kesamaan dengan ubin yang baru diambil: <b>tanaman</b> yang sama (Sakura, Maple, Pinus, Iris) <b>atau simbol</b> yang sama (Burung, Hujan &amp; Awan, Matahari Terbit, Puisi).</li>
+      <li>Ubin yang diambil ditumpuk; ubin teratas menjadi syarat bagi pemain berikutnya.</li>
+    </ul>
+    <div class="legend">${[0,5,10,15].map(fig).join('')}</div>
+    <h3>Cara menang</h3>
+    <ul><li>4 karakter berjajar (horizontal, vertikal, atau diagonal);</li><li>4 karakter membentuk kotak 2×2; atau</li><li>membuat lawan tidak bisa bergerak.</li></ul>
+    <p>Bila ubin <b>terakhir</b> diambil tanpa ada yang menang, permainan <b>seri</b>: tidak ada yang mendapat kemenangan atau poin, lalu pemain yang tadi tidak memulai jalan lebih dulu.</p>
+    <h3>Format</h3>
+    <ul><li><b>Satu permainan</b> — pemenang ronde menang.</li><li><b>3 kemenangan</b> — yang pertama menang 3 ronde.</li>
+    <li><b>Poin</b> — pemenang ronde mendapat poin sebanyak ubin yang tersisa di taman; yang pertama mencapai 10/15/20 menang.</li></ul>
+    <p>Di ronde berikutnya, pemain yang kalah jalan lebih dulu.</p>
+    <div class="row-actions"><button class="btn" id="rHow">▶ Lihat animasinya</button><button class="btn primary" id="rOk">Mengerti</button></div></div>`);
+  $('#rHow').onclick=()=>HOW();
+  $('#rOk').onclick=()=>back?showHome(null,room?null:undefined):close();
+}
+
+function showResult(){
+  if(!S||!S.g.over) return;
+  resultShown=true;
+  const g=S.g,w=g.winner,l=1-w;
+  if(w<0){
+    openModal('result',`<h2>Seri!</h2><p class="lead">Ubin terakhir sudah diambil dan tidak ada yang membentuk barisan 4 atau kotak 2×2. Tidak ada ${S.mode==='points'?'poin':'kemenangan'} untuk siapa pun.</p>
+      ${S.mode!=='single'?`<div class="bigscore"><span>${esc(pname(0))}</span><b style="color:var(--red)">${S.score[0]}</b><span>—</span><b>${S.score[1]}</b><span>${esc(pname(1))}</span></div>`:''}
+      <div class="row-actions"><button class="btn" id="xBoard">Lihat papan</button>${seat>=0?`<button class="btn primary" id="xNext">Main lagi — ${esc(pname(S.nextStarter))} mulai</button>`:''}</div>`);
+    $('#xBoard').onclick=close; const n=$('#xNext'); if(n) n.onclick=()=>{ send({t:'next'}); close(); };
+    return;
+  }
+  const why=g.reason==='block'
+    ? `${esc(pname(l))} tidak bisa bergerak: tidak ada ubin <b>${VEG[veg(g.last)]}</b> atau <b>${SYM[sym(g.last)]}</b> yang tersisa.`
+    : g.reason==='square'?`${esc(pname(w))} membentuk kotak 2×2 karakter.`:`${esc(pname(w))} membentuk barisan 4 karakter.`;
+  const head = seat===w ? (S.matchOver&&S.mode!=='single'?'Kamu memenangkan pertandingan!':'Kamu menang!')
+             : seat===l ? (S.matchOver&&S.mode!=='single'?'Kamu kalah di pertandingan ini':'Kamu kalah')
+             : `${esc(pname(w))} menang!`;
+  const pts=S.mode==='points'?`<p class="lead" style="margin:8px 0 0">+${g.pts} poin untuk ${esc(pname(w))} (ubin tersisa di taman).</p>`:'';
+  let btn='';
+  if(seat>=0) btn = S.matchOver ? `<button class="btn primary" id="xAgain">Main lagi</button>` : `<button class="btn primary" id="xNext">Ronde berikutnya — ${esc(pname(S.nextStarter))} mulai</button>`;
+  openModal('result',`<div class="result-top"><img src="${tokSrc(w,g.img[g.lastCell])}" alt=""><div><h2>${head}</h2><p class="lead" style="margin:0">${why}</p>${pts}</div></div>
+    ${S.mode!=='single'?`<div class="bigscore"><span>${esc(pname(0))}</span><b style="color:var(--red)">${S.score[0]}</b><span>—</span><b>${S.score[1]}</b><span>${esc(pname(1))}</span></div><p class="lead" style="text-align:center;margin:0">Target: ${goal()} ${S.mode==='points'?'poin':'kemenangan'}</p>`:''}
+    <div class="row-actions"><button class="btn" id="xBoard">Lihat papan</button>${btn}</div>
+    ${seat>=0?'<p class="small" style="text-align:right;margin:8px 0 0">Tombol ini bisa ditekan oleh salah satu pemain.</p>':''}`);
+  $('#xBoard').onclick=close;
+  const n=$('#xNext'); if(n) n.onclick=()=>{ send({t:'next'}); close(); };
+  const a=$('#xAgain'); if(a) a.onclick=()=>{ send({t:'rematch'}); close(); };
+}
+
+/* ================== lain-lain ================== */
+let toastT=0;
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2800); }
+function petals(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for(let i=0;i<26;i++){
+    const s=document.createElement('span'); s.className='petal';
+    s.style.left=Math.random()*100+'vw';
+    s.style.setProperty('--dx',(Math.random()*160-80)+'px');
+    s.style.setProperty('--r',(Math.random()*720-360)+'deg');
+    s.style.animationDuration=(3+Math.random()*3)+'s';
+    s.style.animationDelay=(Math.random()*1.2)+'s';
+    if(Math.random()<.35) s.style.background='#e2525a';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),7500);
+  }
+}
+$('#roomChip').onclick=copyInvite;
+$('#bRules').onclick=()=>showRules(false);
+const HOW=()=>OkiyaTutorial.open({base:'/assets/'});
+$('#bHow').onclick=HOW;
+$('#bHome').onclick=()=>{ showHome(); };
+$('#bLab').onclick=()=>{ showLabels=!showLabels; LS.set('okiya-lab',showLabels); if(S) render(); };
+
+for(let t=0;t<16;t++) new Image().src=tileSrc(t);
+for(let p=0;p<2;p++) for(let n=1;n<=8;n++) new Image().src=tokSrc(p,n);
+
+/* ================== mulai ================== */
+renderEmpty();
+const qs=new URLSearchParams(location.search);
+const urlId=(qs.get('id')||(location.pathname.match(/^\/g\/([A-Za-z0-9]+)/)||[])[1]||'').toUpperCase();
+connect();
+if(urlId){
+  const tokens=LS.get('okiya-tokens',{});
+  if(tokens[urlId]) joinRoom(urlId);          // pemain lama: langsung kembali ke kursinya
+  else showHome(null,urlId);                  // tamu baru: isi nama dulu, ID sudah terisi
+}else showHome();
+if(!OkiyaTutorial.seen()) setTimeout(HOW,300);
+})();
+</script>
+</body>
+</html>

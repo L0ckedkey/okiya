@@ -1,0 +1,40 @@
+# Okiya Online
+#   Quick tunnel (gratis, link trycloudflare.com acak):
+#       docker compose --profile quick up -d --build
+#       docker compose logs tunnel        # cari https://....trycloudflare.com
+#   Named tunnel (alamat tetap, butuh akun Cloudflare + domain):
+#       isi TUNNEL_TOKEN di .env, lalu
+#       docker compose --profile named up -d --build
+#   Tanpa tunnel (hanya lokal, http://localhost:3000):
+#       docker compose up -d --build
+
+services:
+  okiya:
+    build: .
+    image: okiya-online:latest
+    container_name: okiya
+    restart: unless-stopped
+    ports:
+      - "${OKIYA_PORT:-3000}:3000"
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: okiya-tunnel
+    profiles: ["quick"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://okiya:3000
+    depends_on:
+      okiya:
+        condition: service_healthy
+
+  tunnel-named:
+    image: cloudflare/cloudflared:latest
+    container_name: okiya-tunnel-named
+    profiles: ["named"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:-}
+    depends_on:
+      okiya:
+        condition: service_healthy
