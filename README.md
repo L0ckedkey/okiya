@@ -60,6 +60,14 @@ Tanpa file `.env` pun bisa: `docker compose --profile quick up -d --build`.
   dengan domain sendiri, dan arahkan ke `http://localhost:3000`. WebSocket sudah didukung tanpa pengaturan tambahan.
 - Selama komputer, server, dan tunnel menyala, game bisa dimainkan.
 
+## Lawan bot
+
+- Saat membuat permainan, pilih **Lawan bot** lalu tingkatnya: **Mudah**, **Normal**, atau **Sulit**.
+- Kalau sudah membuat room untuk teman tapi temannya belum datang, ada tombol **Lawan bot** di ruang tunggu.
+- Bot berjalan di server (thread terpisah, `bot-worker.js`), jadi room lain tidak ikut melambat.
+  Bot Sulit berpikir sampai ±1,5 detik per langkah dan nyaris sempurna di akhir permainan.
+- Orang lain yang membuka Game ID room bot akan menjadi penonton.
+
 ## Cara kerja
 
 - Semua aturan dicek di **server** (`game.js`), jadi langkah curang dari browser ditolak.
@@ -77,6 +85,8 @@ server.js        server HTTP + WebSocket (/ws), room per Game ID
 Dockerfile       image Node 22 Alpine
 docker-compose.yml  server + cloudflared (profil quick / named)
 game.js          aturan Okiya
+bot.js           otak bot (negamax + alpha-beta)
+bot-worker.js    thread tempat bot berpikir
 public/          halaman game + gambar tile & karakter (assets/)
 ```
 

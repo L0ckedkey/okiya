@@ -732,7 +732,7 @@ function onMsg(m){
 
 /* ================== aksi ================== */
 const myName=()=>LS.get('okiya-name','');
-function createRoom(mode,target){ send({t:'create',mode,target,name:myName()}); }
+function createRoom(mode,target,bot){ send({t:'create',mode,target,bot:bot||null,name:myName()}); }
 function joinRoom(id){
   id=String(id||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(id.length<4){ return false; }
@@ -771,6 +771,7 @@ function renderPlayer(p){
   else sc=`<span>Menang</span><b>${S.score[p]}</b>`;
   const tray=g.order[p].map((n,i)=>`<img src="${tokSrc(p,n)}" alt="" class="${i<g.used[p]?'used':''}">`).join('');
   const status=!pl?`<span class="online off"><i></i>belum bergabung</span>`
+    :pl.bot?`<span class="online"><i style="background:#c9982f"></i>bot komputer</span>`
     :`<span class="online ${pl.online?'':'off'}"><i></i>${pl.online?'online':'terputus'}</span>`;
   el.innerHTML=`<span class="turnTag">GILIRAN</span>
     <div class="head"><div class="avatar"><img src="${tokSrc(p,g.order[p][Math.min(g.used[p],7)])}" alt=""></div>
@@ -795,7 +796,8 @@ function render(){
   if(S.waiting){
     who='Menunggu lawan bergabung…';
     what=`Bagikan Game ID <b>${esc(S.id)}</b> atau link berikut ke teman:`;
-    act=`<div class="share"><input class="inp" value="${esc(inviteLink())}" readonly onclick="this.select()"><button class="btn primary" id="bCopy">Salin link</button></div>`;
+    act=`<div class="share"><input class="inp" value="${esc(inviteLink())}" readonly onclick="this.select()"><button class="btn primary" id="bCopy">Salin link</button></div>`
+      +(seat===0?`<div class="share" style="align-items:center"><span class="small">Tidak ada teman? Lawan bot:</span><button class="btn" data-bot="easy">Mudah</button><button class="btn" data-bot="normal">Normal</button><button class="btn" data-bot="hard">Sulit</button></div>`:'');
   }else if(g.over){
     who=g.winner<0?'Seri!':`${esc(pname(g.winner))} menang!`;
     what=g.reason==='tie'?'Ubin terakhir sudah diambil tanpa pemenang.':g.reason==='block'?`${esc(pname(1-g.winner))} tidak bisa bergerak.`:g.reason==='square'?'Membentuk kotak 2×2.':'Membentuk barisan 4 karakter.';
@@ -804,8 +806,9 @@ function render(){
     who='Giliranmu';
     what = `Pilih ${g.last<0?'':'ubin bergambar '}${need}.`;
   }else{
-    who=`Giliran ${esc(pname(g.turn))}`;
-    what = `${seat<0?'Anda menonton. ':'Menunggu langkah lawan. '}Harus memilih ${need}.`;
+    const isBot=S.players[g.turn]&&S.players[g.turn].bot;
+    who=isBot?`${esc(pname(g.turn))} sedang berpikir…`:`Giliran ${esc(pname(g.turn))}`;
+    what = `${seat<0?'Anda menonton. ':isBot?'':'Menunggu langkah lawan. '}Harus memilih ${need}.`;
   }
   if(!S.waiting&&!g.over&&S.note&&g.pile.length===0){
     what=(S.note.kind==='draw'?`Undian: <b>${esc(pname(S.note.p))}</b> jalan lebih dulu.`:S.note.kind==='tie'?`Ronde lalu seri, jadi <b>${esc(pname(S.note.p))}</b> gantian jalan lebih dulu.`:`<b>${esc(pname(S.note.p))}</b> kalah ronde lalu, jadi jalan lebih dulu.`)+'<br>'+what;
@@ -815,6 +818,7 @@ function render(){
   }
   $('#msg').innerHTML=`<div class="who">${who}</div><div class="what">${what}</div>${act}`;
   const bc=$('#bCopy'); if(bc) bc.onclick=copyInvite;
+  document.querySelectorAll('#msg [data-bot]').forEach(b=>b.onclick=()=>{ send({t:'addbot',level:b.dataset.bot}); b.parentNode.querySelectorAll('button').forEach(x=>x.disabled=true); });
   const br=$('#bRes'); if(br) br.onclick=showResult;
 
   // papan
@@ -874,7 +878,7 @@ function seg(name,opts,val){
 
 function showHome(errorMsg, presetId){
   const last=LS.get('okiya-last',null), tokens=LS.get('okiya-tokens',{});
-  const fmt=LS.get('okiya-fmt',{mode:'single',target:10});
+  const fmt=Object.assign({mode:'single',target:10,opp:'friend',level:'normal'},LS.get('okiya-fmt',{}));
   openModal('home',`<div class="home">
     <h2>Okiya Online</h2>
     <p class="lead" style="margin-bottom:10px">Tanpa login — cukup Game ID.</p>
@@ -882,7 +886,9 @@ function showHome(errorMsg, presetId){
     <div class="cards">
       <div class="card"><h3>Gabung permainan</h3><p>Masukkan Game ID dari temanmu.</p>
         <form class="joinrow" id="fJoin"><input class="inp code" id="code" maxlength="8" placeholder="ABC12" value="${esc(presetId||'')}" autocomplete="off"><button class="btn primary" type="submit">Gabung</button></form></div>
-      <div class="card"><h3>Buat permainan baru</h3><p>Kamu bermain sebagai <b>Merah</b>. Bagikan Game ID ke lawan.</p>
+      <div class="card"><h3>Buat permainan baru</h3><p>Kamu bermain sebagai <b>Merah</b>. Lawan teman (bagikan Game ID) atau bot.</p>
+        <div class="field" style="margin-bottom:10px">${seg('opp',[['friend','Lawan teman'],['bot','Lawan bot']],fmt.opp)}</div>
+        <div class="field" id="fLevel" style="margin-bottom:10px">${seg('level',[['easy','Bot mudah'],['normal','Bot normal'],['hard','Bot sulit']],fmt.level)}</div>
         <div class="field" style="margin-bottom:10px">${seg('mode',[['single','Satu permainan'],['sets','3 kemenangan'],['points','Poin']],fmt.mode)}</div>
         <div class="field" id="fTarget" style="margin-bottom:10px">${seg('target',[[10,'10 poin'],[15,'15 poin'],[20,'20 poin']],fmt.target)}</div>
         <button class="btn primary" id="bCreate">Buat permainan</button></div>
@@ -891,8 +897,13 @@ function showHome(errorMsg, presetId){
     <div class="err" id="hErr">${esc(errorMsg||'')}</div>
     <div class="row-actions">${room?'<button class="btn" id="hClose">Tutup</button>':''}<button class="btn" id="hHow">▶ Cara main</button><button class="btn" id="hRules">Aturan</button></div></div>`);
   const saveName=()=>LS.set('okiya-name',$('#nm').value.trim().slice(0,20));
-  const sync=()=>{$('#fTarget').style.display=modal.querySelector('[name=mode]:checked').value==='points'?'':'none';};
-  modal.querySelectorAll('[name=mode]').forEach(i=>i.onchange=sync); sync();
+  const sync=()=>{
+    $('#fTarget').style.display=modal.querySelector('[name=mode]:checked').value==='points'?'':'none';
+    const bot=modal.querySelector('[name=opp]:checked').value==='bot';
+    $('#fLevel').style.display=bot?'':'none';
+    $('#bCreate').textContent=bot?'Main lawan bot':'Buat permainan';
+  };
+  modal.querySelectorAll('[name=mode],[name=opp]').forEach(i=>i.onchange=sync); sync();
   $('#fJoin').onsubmit=e=>{
     e.preventDefault(); saveName();
     const v=$('#code').value;
@@ -902,10 +913,11 @@ function showHome(errorMsg, presetId){
   $('#bCreate').onclick=()=>{
     saveName();
     const mode=modal.querySelector('[name=mode]:checked').value, target=+modal.querySelector('[name=target]:checked').value;
-    LS.set('okiya-fmt',{mode,target});
+    const opp=modal.querySelector('[name=opp]:checked').value, level=modal.querySelector('[name=level]:checked').value;
+    LS.set('okiya-fmt',{mode,target,opp,level});
     if(room) send({t:'leave'});
     room=null; S=null; prevMoves=-1; prevOver=false;
-    createRoom(mode,target); $('#hErr').textContent='Membuat permainan…';
+    createRoom(mode,target,opp==='bot'?level:null); $('#hErr').textContent='Membuat permainan…';
   };
   const al=$('#aLast'); if(al) al.onclick=e=>{e.preventDefault(); saveName(); joinRoom(last);};
   const hc=$('#hClose'); if(hc) hc.onclick=close;

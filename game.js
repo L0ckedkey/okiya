@@ -66,4 +66,4 @@ function end(g, w, reason, line) {
   g.pts = g.cells.filter(c => c < 16).length;   // ubin yang masih tersisa di taman
 }
 
-module.exports = { legal, play, newGame };
+module.exports = { legal, play, newGame, winAt, LINES };

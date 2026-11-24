@@ -3,7 +3,7 @@ WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
-COPY server.js game.js ./
+COPY server.js game.js bot.js bot-worker.js ./
 COPY public ./public
 USER node
 EXPOSE 3000

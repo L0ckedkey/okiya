@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
+const { Worker } = require('worker_threads');
 const Game = require('./game');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -43,6 +44,62 @@ const newId = () => { let id; do { id = Array.from({ length: 5 }, () => ALPH[cry
 const newToken = () => crypto.randomBytes(16).toString('hex');
 const cleanName = (s, fallback) => (String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 20)) || fallback;
 const goal = r => r.mode === 'single' ? 1 : r.mode === 'sets' ? 3 : r.target;
+const BOT_NAMES = { easy: 'Bot Mudah', normal: 'Bot Normal', hard: 'Bot Sulit' };
+const makeBot = level => ({ token: null, bot: true, level, name: BOT_NAMES[level], socks: new Set() });
+
+/* ---------------- bot (berjalan di worker thread) ---------------- */
+let worker = null, reqId = 0;
+const pending = new Map();
+function getWorker() {
+  if (worker) return worker;
+  worker = new Worker(path.join(__dirname, 'bot-worker.js'));
+  worker.on('message', ({ id, move }) => { const cb = pending.get(id); if (cb) { pending.delete(id); cb(move); } });
+  worker.on('error', e => console.error('[bot] worker error', e));
+  worker.on('exit', () => { worker = null; for (const cb of pending.values()) cb(-1); pending.clear(); });
+  return worker;
+}
+function askBot(g, p, level) {
+  return new Promise(res => {
+    const id = ++reqId; pending.set(id, res);
+    try { getWorker().postMessage({ id, cells: g.cells, last: g.last, p, level }); }
+    catch (e) { pending.delete(id); res(-1); }
+  });
+}
+// jalankan bot bila sekarang gilirannya
+function scheduleBot(r) {
+  const g = r.game, s = r.seats[g.turn];
+  if (!s || !s.bot || g.over || !r.seats[0] || !r.seats[1] || r.botBusy) return;
+  r.botBusy = true;
+  const n = g.pile.length, t0 = Date.now();
+  askBot(g, g.turn, s.level).then(move => {
+    const delay = Math.max(0, 650 + Math.random() * 500 - (Date.now() - t0));   // jeda supaya terasa "berpikir"
+    setTimeout(() => {
+      r.botBusy = false;
+      if (!rooms.has(r.id) || r.game !== g || g.over || g.pile.length !== n) return scheduleBot(r);
+      const ms = Game.legal(g.cells, g.last);
+      if (!ms.includes(move)) move = ms[crypto.randomInt(ms.length)];
+      Game.play(g, move);
+      afterMove(r);
+    }, delay);
+  });
+}
+function afterMove(r) {
+  const g = r.game;
+  r.note = null;
+  if (g.over) {
+    const mt = r.match;
+    mt.games++;
+    if (g.winner < 0) { mt.lastTie = true; mt.nextStarter = 1 - g.starter; }     // seri: gantian yang mulai
+    else {
+      mt.lastTie = false;
+      mt.score[g.winner] += r.mode === 'points' ? g.pts : 1;
+      mt.nextStarter = 1 - g.winner;
+      mt.over = mt.score[g.winner] >= goal(r);
+    }
+  }
+  broadcast(r);
+  scheduleBot(r);
+}
 
 function startGame(r, first) {
   r.game = Game.newGame(r.match.nextStarter);
@@ -53,7 +110,7 @@ function stateOf(r) {
   const g = r.game, m = r.match, waiting = !r.seats[1];
   return {
     t: 'state', id: r.id, mode: r.mode, target: r.target, waiting,
-    players: r.seats.map(s => s ? { name: s.name, online: s.socks.size > 0 } : null),
+    players: r.seats.map(s => s ? { name: s.name, online: !!s.bot || s.socks.size > 0, bot: !!s.bot, level: s.level || null } : null),
     spectators: r.spect.size,
     score: m.score, games: m.games, matchOver: m.over, nextStarter: m.nextStarter,
     note: r.note,
@@ -119,10 +176,12 @@ function handle(ws, m) {
         seats: [{ token, name: cleanName(m.name, 'Pemain Merah'), socks: new Set() }, null],
         match: { score: [0, 0], games: 0, nextStarter: crypto.randomInt(2), over: false },
       };
+      if (BOT_NAMES[m.bot]) r.seats[1] = makeBot(m.bot);
       startGame(r, true);
       rooms.set(r.id, r);
-      console.log(`[room ${r.id}] dibuat (${mode}${mode === 'points' ? ' ' + target : ''})`);
-      return attach(ws, r, 0, token);
+      console.log(`[room ${r.id}] dibuat (${mode}${mode === 'points' ? ' ' + target : ''}${r.seats[1] ? ', lawan ' + r.seats[1].name : ''})`);
+      attach(ws, r, 0, token);
+      return scheduleBot(r);
     }
     case 'join': {
       const id = String(m.id || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -150,24 +209,19 @@ function handle(ws, m) {
       const g = r.game;
       if (g.over || g.turn !== ws.seat) return;
       if (!Game.play(g, Number(m.i))) return;
-      r.note = null;
-      if (g.over) {
-        const mt = r.match;
-        mt.games++;
-        if (g.winner < 0) { mt.lastTie = true; mt.nextStarter = 1 - g.starter; }     // seri: gantian yang mulai
-        else {
-          mt.lastTie = false;
-          mt.score[g.winner] += r.mode === 'points' ? g.pts : 1;
-          mt.nextStarter = 1 - g.winner;
-          mt.over = mt.score[g.winner] >= goal(r);
-        }
-      }
-      return broadcast(r);
+      return afterMove(r);
+    }
+    case 'addbot': {               // pembuat room memilih lawan bot sambil menunggu
+      const r = ws.room; if (!r || ws.seat !== 0 || r.seats[1]) return;
+      const level = BOT_NAMES[m.level] ? m.level : 'normal';
+      r.seats[1] = makeBot(level);
+      console.log(`[room ${r.id}] lawan ${r.seats[1].name}`);
+      broadcast(r); return scheduleBot(r);
     }
     case 'next': {                 // ronde berikutnya (yang kalah jalan duluan)
       const r = ws.room; if (!r || ws.seat < 0) return;
       if (!r.game.over || r.match.over) return;
-      startGame(r, false); return broadcast(r);
+      startGame(r, false); broadcast(r); return scheduleBot(r);
     }
     case 'rematch': {              // pertandingan baru di room yang sama
       const r = ws.room; if (!r || ws.seat < 0) return;
@@ -175,7 +229,7 @@ function handle(ws, m) {
       if (['single', 'sets', 'points'].includes(m.mode)) r.mode = m.mode;
       if ([10, 15, 20].includes(Number(m.target))) r.target = Number(m.target);
       r.match = { score: [0, 0], games: 0, nextStarter: crypto.randomInt(2), over: false };
-      startGame(r, true); return broadcast(r);
+      startGame(r, true); broadcast(r); return scheduleBot(r);
     }
   }
 }
