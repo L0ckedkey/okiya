@@ -109,8 +109,8 @@ function startGame(r, first) {
 function stateOf(r) {
   const g = r.game, m = r.match, waiting = !r.seats[1];
   return {
-    t: 'state', id: r.id, mode: r.mode, target: r.target, waiting,
-    players: r.seats.map(s => s ? { name: s.name, online: !!s.bot || s.socks.size > 0, bot: !!s.bot, level: s.level || null } : null),
+    t: 'state', id: r.id, mode: r.mode, target: r.target, waiting, local: !!r.local,
+    players: r.seats.map(s => s ? { name: s.name, online: !!s.bot || (s.local ? r.seats[0].socks.size > 0 : s.socks.size > 0), bot: !!s.bot, level: s.level || null } : null),
     spectators: r.spect.size,
     score: m.score, games: m.games, matchOver: m.over, nextStarter: m.nextStarter,
     note: r.note,
@@ -176,7 +176,10 @@ function handle(ws, m) {
         seats: [{ token, name: cleanName(m.name, 'Pemain Merah'), socks: new Set() }, null],
         match: { score: [0, 0], games: 0, nextStarter: crypto.randomInt(2), over: false },
       };
-      if (BOT_NAMES[m.bot]) r.seats[1] = makeBot(m.bot);
+      if (m.local) {                 // 2 pemain bergantian di satu perangkat
+        r.local = true;
+        r.seats[1] = { token: null, local: true, name: cleanName(m.name2, 'Pemain Hitam'), socks: new Set() };
+      } else if (BOT_NAMES[m.bot]) r.seats[1] = makeBot(m.bot);
       startGame(r, true);
       rooms.set(r.id, r);
       console.log(`[room ${r.id}] dibuat (${mode}${mode === 'points' ? ' ' + target : ''}${r.seats[1] ? ', lawan ' + r.seats[1].name : ''})`);
@@ -207,7 +210,7 @@ function handle(ws, m) {
       const r = ws.room; if (!r || ws.seat < 0) return;
       if (!r.seats[1]) return err(ws, 'Tunggu lawan bergabung dulu.');
       const g = r.game;
-      if (g.over || g.turn !== ws.seat) return;
+      if (g.over || (g.turn !== ws.seat && !(r.local && ws.seat === 0))) return;   // mode 1 perangkat: pemilik room menjalankan kedua sisi
       if (!Game.play(g, Number(m.i))) return;
       return afterMove(r);
     }

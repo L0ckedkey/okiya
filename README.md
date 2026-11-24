@@ -60,6 +60,12 @@ Tanpa file `.env` pun bisa: `docker compose --profile quick up -d --build`.
   dengan domain sendiri, dan arahkan ke `http://localhost:3000`. WebSocket sudah didukung tanpa pengaturan tambahan.
 - Selama komputer, server, dan tunnel menyala, game bisa dimainkan.
 
+## 2 pemain di satu perangkat
+
+Di kartu "Buat permainan baru", pilih **2 pemain, 1 perangkat** dan isi nama pemain Hitam.
+Kalian bergantian menyentuh layar yang sama; papan menunjukkan giliran siapa. Orang lain yang
+membuka Game ID-nya hanya bisa menonton.
+
 ## Lawan bot
 
 - Saat membuat permainan, pilih **Lawan bot** lalu tingkatnya: **Mudah**, **Normal**, atau **Sulit**.
